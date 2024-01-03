@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# Vérifier si le nombre d'arguments est correct
+if [ "$#" -ne 2 ]; then
+    echo "Usage: $0 <arbre1> <arbre2>"
+    exit 1
+fi
+
+arbre1="$1"
+arbre2="$2"
+
+# Fonction récursive pour comparer les arbres
+compare_arbres() {
+    local dossier1="$1"
+    local dossier2="$2"
+
+    # Récupérer la liste des fichiers dans chaque dossier
+    fichiers1=("$dossier1"/*)
+    fichiers2=("$dossier2"/*)
+
+    # Vérifier si le nombre de fichiers est le même
+    if [ ${#fichiers1[@]} -ne ${#fichiers2[@]} ]; then
+        echo "Les arbres ne sont pas synchrones. Nombre de fichiers/dossiers différent dans $dossier1 et $dossier2."
+        exit 1
+    fi
+
+    # Parcourir les fichiers dans le premier dossier
+    for fichier1 in "${fichiers1[@]}"; do
+        fichier2="$dossier2/$(basename "$fichier1")"
+
+        # Vérifier si les fichiers/dossiers ont le même nom
+        if [ "$(basename "$fichier1")" != "$(basename "$fichier2")" ]; then
+            echo "Les arbres ne sont pas synchrones. Les fichiers/dossiers ne correspondent pas : $fichier1 et $fichier2."
+            exit 1
+        fi
+
+        # Si le fichier est un dossier, appeler récursivement la fonction
+        if [ -d "$fichier1" ]; then
+            compare_arbres "$fichier1" "$fichier2"
+        fi
+    done
+}
+
+# Appeler la fonction pour comparer les arbres
+compare_arbres "$arbre1" "$arbre2"
+
+echo "Les arbres sont synchrones."
